@@ -3,7 +3,7 @@ target/
 .mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
-!**/src/main/resources/application.properties
+/src/main/resources/application.properties
 .gptignore
 
 ### STS ###
@@ -15,7 +15,7 @@ target/
 .springBeans
 .sts4-cache
 mvnw
-mnvw.cmd
+mvnw.cmd
 .gitattributes
 
 ### IntelliJ IDEA ###

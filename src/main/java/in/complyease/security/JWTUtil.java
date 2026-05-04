@@ -8,7 +8,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class JWTUtil {
-    private final String SECRET = "secretkey123";
+    private final String SECRET = "secretkey123secretkey123secretkey123";
 
     public String generateToken(String email) {
     	System.out.println("Token Generated!");
