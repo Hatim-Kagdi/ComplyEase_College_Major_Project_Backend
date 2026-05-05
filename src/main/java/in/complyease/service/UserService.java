@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import in.complyease.dto.LoginRequest;
 import in.complyease.dto.RegisterRequest;
 import in.complyease.entity.User;
+import in.complyease.enums.UserRole;
 import in.complyease.repository.UserRepository;
 import in.complyease.security.JWTUtil;
 
@@ -23,8 +24,7 @@ public class UserService {
 		user.setName(request.getName());
 		user.setEmail(request.getEmail());
 		user.setPassword(passwordEncoder.encode(request.getPassword()));
-		user.setRole("USER");
-
+		user.setRole(UserRole.ROLE_USER);
 		return userRepository.save(user);
 	}
 	

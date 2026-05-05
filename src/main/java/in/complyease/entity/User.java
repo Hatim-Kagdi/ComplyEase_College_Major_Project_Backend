@@ -1,13 +1,22 @@
 package in.complyease.entity;
 
+import java.util.List;
+
+import org.hibernate.annotations.*;
+
+import in.complyease.enums.UserRole;
 import jakarta.persistence.*;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Table;
 import lombok.*;
 
 @Entity
 @Table(name = "users")
 @NoArgsConstructor
 @AllArgsConstructor
-public class User {
+@SQLDelete(sql = "UPDATE users SET is_deleted = true WHERE id = ?")
+@SQLRestriction("is_deleted = false")
+public class User extends BaseEntity{
 	
 	    @Id
 	    @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -23,8 +32,12 @@ public class User {
 	    @Column
 	    private String password;
 	    
+	    @Enumerated(EnumType.STRING)
 	    @Column
-	    private String role;
+	    private UserRole role;
+	    
+	    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+	    private List<Business> businesses;
 
 		public Long getId() {
 			return id;
@@ -58,11 +71,11 @@ public class User {
 			this.password = password;
 		}
 
-		public String getRole() {
+		public UserRole getRole() {
 			return role;
 		}
 
-		public void setRole(String role) {
+		public void setRole(UserRole role) {
 			this.role = role;
 		}
 }

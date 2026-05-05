@@ -23,7 +23,8 @@ public class SecurityConfig {
 	        http
 	            .csrf(csrf -> csrf.disable()) // disable CSRF for APIs
 	            .authorizeHttpRequests(auth -> auth
-	                .requestMatchers("/auth/**").permitAll()// allow register/login
+	                .requestMatchers("/auth/**").permitAll()
+	                .requestMatchers("/user/**").hasRole("USER")// allow register/login
 	                .anyRequest().authenticated() // secure everything else
 	            );
 
