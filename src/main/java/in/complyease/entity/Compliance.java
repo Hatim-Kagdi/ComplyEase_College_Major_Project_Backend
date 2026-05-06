@@ -8,11 +8,16 @@ import in.complyease.enums.ComplianceStatus;
 import in.complyease.enums.ComplianceType;
 import jakarta.persistence.*;
 import jakarta.persistence.Table;
+import lombok.*;
 
 @Entity
 @Table(name = "compliances")
 @SQLDelete(sql = "UPDATE compliances SET is_deleted = true WHERE compliance_id = ?")
 @SQLRestriction("is_deleted = false")
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
 public class Compliance extends BaseEntity{
 	
 	@Id
@@ -34,59 +39,4 @@ public class Compliance extends BaseEntity{
 	@Enumerated(EnumType.STRING)
 	@Column(name = "status")
 	private ComplianceStatus complianceStatus;
-
-	public int getComplianceId() {
-		return complianceId;
-	}
-
-	public void setComplianceId(int complianceId) {
-		this.complianceId = complianceId;
-	}
-
-	public Business getBusiness() {
-		return business;
-	}
-
-	public void setBusiness(Business business) {
-		this.business = business;
-	}
-
-	public ComplianceType getComplianceType() {
-		return complianceType;
-	}
-
-	public void setComplianceType(ComplianceType complianceType) {
-		this.complianceType = complianceType;
-	}
-
-	public LocalDate getComplianceDueDate() {
-		return complianceDueDate;
-	}
-
-	public void setComplianceDueDate(LocalDate complianceDueDate) {
-		this.complianceDueDate = complianceDueDate;
-	}
-
-	public ComplianceStatus getComplianceStatus() {
-		return complianceStatus;
-	}
-
-	public void setComplianceStatus(ComplianceStatus complianceStatus) {
-		this.complianceStatus = complianceStatus;
-	}
-
-	public Compliance(int complianceId, Business business, ComplianceType complianceType, LocalDate complianceDueDate,
-			ComplianceStatus complianceStatus) {
-		super();
-		this.complianceId = complianceId;
-		this.business = business;
-		this.complianceType = complianceType;
-		this.complianceDueDate = complianceDueDate;
-		this.complianceStatus = complianceStatus;
-	}
-
-	public Compliance() {
-	}
-	
-	
 }

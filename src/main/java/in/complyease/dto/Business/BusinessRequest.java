@@ -1,22 +1,16 @@
 package in.complyease.dto.Business;
 
+import jakarta.validation.constraints.NotBlank;
+import lombok.*;
+
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
 public class BusinessRequest {
-	private String businessName;
-	private String businessGstNumber;
+	    @NotBlank(message = "Business name is required")
+	    private String businessName;
 
-	public String getBusinessName() {
-		return businessName;
+	    @NotBlank(message = "GST number is required")
+	    private String businessGstNumber;
 	}
-
-	public void setBusinessName(String businessName) {
-		this.businessName = businessName;
-	}
-
-	public String getBusinessGstNumber() {
-		return businessGstNumber;
-	}
-
-	public void setBusinessGstNumber(String businessGstNumber) {
-		this.businessGstNumber = businessGstNumber;
-	}
-}

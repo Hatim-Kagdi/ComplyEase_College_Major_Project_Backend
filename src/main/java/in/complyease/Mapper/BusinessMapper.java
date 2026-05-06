@@ -7,7 +7,7 @@ public class BusinessMapper {
 	
 	public static BusinessResponse mapToBusinessDTO(Business business) {
 		return new BusinessResponse(
-				business.getId(),
+				business.getBusinessId(),
 				business.getBusinessName(),
 				business.getBusinessGstNumber()
 				);
