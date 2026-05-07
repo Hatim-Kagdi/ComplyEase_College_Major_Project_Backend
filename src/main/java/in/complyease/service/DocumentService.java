@@ -124,4 +124,31 @@ public class DocumentService {
 
         documentRepository.delete(document);
     }
+    
+    public List<DocumentResponse> getAssignedBusinessDocuments(
+            String email
+    ) {
+
+        User ca = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("CA not found"));
+
+        // ASSIGNED BUSINESSES
+        List<Business> businesses =
+                businessRepository.findByAssignedCA(ca);
+
+        // DOCUMENTS
+        List<Document> documents =
+                documentRepository.findByBusinessIn(businesses);
+
+        return documents.stream()
+                .map(doc -> new DocumentResponse(
+                        doc.getDocumentId(),
+                        doc.getBusiness().getBusinessId(),
+                        doc.getBusiness().getBusinessName(),
+                        doc.getDocumentFileName(),
+                        doc.getDocumentFileUrl(),
+                        doc.getDocumentType()
+                ))
+                .toList();
+    }
 }

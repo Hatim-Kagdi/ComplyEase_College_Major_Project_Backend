@@ -160,4 +160,74 @@ public class ComplianceService {
 
 	    complianceRepository.delete(compliance);
 	}
+	
+	public List<ComplianceResponse> getAssignedBusinessCompliances(
+	        String email
+	) {
+
+	    User ca = userRepository.findByEmail(email)
+	            .orElseThrow(() -> new RuntimeException("CA not found"));
+
+	    // Assigned businesses
+	    List<Business> businesses =
+	            businessRepository.findByAssignedCA(ca);
+
+	    // Their compliances
+	    List<Compliance> compliances =
+	            complianceRepository.findByBusinessIn(businesses);
+
+	    return compliances.stream()
+	            .map(c -> new ComplianceResponse(
+	                    c.getComplianceId(),
+	                    c.getBusiness().getBusinessId(),
+	                    c.getBusiness().getBusinessName(),
+	                    c.getComplianceType(),
+	                    c.getComplianceDueDate(),
+	                    c.getComplianceStatus()
+	            ))
+	            .toList();
+	}
+	
+	@Transactional
+	public ComplianceResponse updateComplianceStatusByCA(
+	        int complianceId,
+	        String email,
+	        String status
+	) {
+
+	    User ca = userRepository.findByEmail(email)
+	            .orElseThrow(() -> new RuntimeException("CA not found"));
+
+	    Compliance compliance = complianceRepository.findById(complianceId)
+	            .orElseThrow(() -> new RuntimeException("Compliance not found"));
+
+	    // CHECK CA IS ASSIGNED TO BUSINESS
+	    if (
+	        compliance.getBusiness().getAssignedCA() == null
+	        ||
+	        !compliance.getBusiness()
+	                .getAssignedCA()
+	                .getId()
+	                .equals(ca.getId())
+	    ) {
+	        throw new RuntimeException(
+	                "You are not assigned to this business"
+	        );
+	    }
+
+	    compliance.setComplianceStatus(
+	            in.complyease.enums.ComplianceStatus.valueOf(status)
+	    );
+
+	    Compliance updated = complianceRepository.save(compliance);
+
+	    return new ComplianceResponse(
+	            updated.getComplianceId(),
+	            updated.getBusiness().getBusinessId(),
+	            updated.getBusiness().getBusinessName(),
+	            updated.getComplianceType(),
+	            updated.getComplianceDueDate(),
+	            updated.getComplianceStatus()
+	    );
+	}
 }

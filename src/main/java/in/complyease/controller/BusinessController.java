@@ -7,16 +7,20 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import in.complyease.dto.UserDashboardStatsDTO;
 import in.complyease.dto.business.AssignedCADTO;
 import in.complyease.dto.business.BusinessRequest;
 import in.complyease.dto.business.BusinessResponse;
 import in.complyease.service.BusinessService;
+import in.complyease.service.UserDashboardService;
 import jakarta.validation.Valid;
 
 @RestController
 public class BusinessController {
 
     @Autowired private BusinessService businessService;
+    
+    @Autowired private UserDashboardService dashboardService;
 
     @PostMapping("/user/business")
     public ResponseEntity<?> createBusiness(@Valid @RequestBody BusinessRequest request,
@@ -56,20 +60,7 @@ public class BusinessController {
             businessService.updateBusiness(id, request, email)
         );
     }
-   
-    
-    @GetMapping("/ca/business")
-    public ResponseEntity<?> getAssignedBusinesses(
-            Principal principal
-    ) {
-
-        String email = principal.getName();
-
-        return ResponseEntity.ok(
-                businessService.getAssignedBusinesses(email)
-        );
-    }
-    
+  
     @PatchMapping("/user/business/{id}/request-ca")
     public ResponseEntity<?> requestCA(
             @PathVariable int id,
@@ -79,6 +70,18 @@ public class BusinessController {
 
         return ResponseEntity.ok(
                 businessService.requestCA(id, email)
+        );
+    }
+    
+    @GetMapping("/user/dashboard/stats")
+    public ResponseEntity<UserDashboardStatsDTO> getDashboardStats(
+            Principal principal
+    ) {
+
+        String email = principal.getName();
+
+        return ResponseEntity.ok(
+                dashboardService.getUserDashboardStats(email)
         );
     }
    
