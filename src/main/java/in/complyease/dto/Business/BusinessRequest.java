@@ -1,4 +1,4 @@
-package in.complyease.dto.Business;
+package in.complyease.dto.business;
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.*;

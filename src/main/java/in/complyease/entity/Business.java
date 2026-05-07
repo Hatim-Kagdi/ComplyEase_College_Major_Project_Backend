@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.hibernate.annotations.*;
 
+import in.complyease.enums.CAAssignmentStatus;
 import jakarta.persistence.*;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Table;
@@ -33,6 +34,14 @@ public class Business extends BaseEntity{
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "user_id")
 	private User user;
+	
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "assigned_ca_id")
+	private User assignedCA;
+	
+	@Enumerated(EnumType.STRING)
+	@Column(name = "ca_assignment_status")
+	private CAAssignmentStatus caAssignmentStatus;
 	
 	@OneToMany(mappedBy = "business", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
 	private List<Compliance> compliances;

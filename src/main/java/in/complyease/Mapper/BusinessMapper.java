@@ -1,6 +1,6 @@
 package in.complyease.Mapper;
 
-import in.complyease.dto.Business.BusinessResponse;
+import in.complyease.dto.business.BusinessResponse;
 import in.complyease.entity.Business;
 
 public class BusinessMapper {
@@ -9,7 +9,8 @@ public class BusinessMapper {
 		return new BusinessResponse(
 				business.getBusinessId(),
 				business.getBusinessName(),
-				business.getBusinessGstNumber()
+				business.getBusinessGstNumber(),
+				business.getCaAssignmentStatus()
 				);
 	}
 

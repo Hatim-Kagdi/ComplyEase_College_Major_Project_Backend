@@ -10,6 +10,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+import in.complyease.enums.UserRole;
+
 import java.io.IOException;
 import java.util.List;
 
@@ -27,24 +29,23 @@ public class JWTFilter extends OncePerRequestFilter {
 
         String authHeader = request.getHeader("Authorization");
 
-        // 1. Only proceed if there is a Bearer token
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             String token = authHeader.substring(7);
             
-            // 2. Wrap in try-catch to prevent "MalformedJwtException" from crashing the request
             try {
-                // Ensure token isn't just the string "null" or empty
                 if (!token.isBlank() && !token.equals("null")) {
+                    // Extract BOTH Email and Role
                     String email = jwtUtil.extractEmail(token);
+                    String role = jwtUtil.extractRole(token);
 
-                    // 3. Only authenticate if email is found and user isn't already authenticated
                     if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
                         
-                        // Note: In the future, you should load real roles from your DB here
+                        // Use the role extracted from the token
                         List<GrantedAuthority> authorities = List.of(
-                                new SimpleGrantedAuthority("ROLE_USER")
+                                new SimpleGrantedAuthority(role)
                         );
 
+                        // Create the Auth object with the email as the Principal
                         UsernamePasswordAuthenticationToken auth =
                                 new UsernamePasswordAuthenticationToken(
                                         email,
@@ -56,13 +57,10 @@ public class JWTFilter extends OncePerRequestFilter {
                     }
                 }
             } catch (Exception e) {
-                // If token is invalid/expired, we just log it and let the request continue.
-                // Spring Security will then block it if the endpoint is not "permitAll()".
-                logger.error("Could not set user authentication in security context", e);
+                logger.error("JWT Authentication failed: " + e.getMessage());
             }
         }
 
-        // 4. Always call the next filter!
         filterChain.doFilter(request, response);
     }
 }

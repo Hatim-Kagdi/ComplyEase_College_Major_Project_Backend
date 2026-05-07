@@ -41,5 +41,8 @@ public class User extends BaseEntity{
 	    
 	    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
 	    private List<Business> businesses;
+	    
+	    @OneToMany(mappedBy = "assignedCA", fetch = FetchType.LAZY)
+	    private List<Business> assignedBusinesses;
 
 }

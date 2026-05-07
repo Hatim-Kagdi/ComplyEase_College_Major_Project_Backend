@@ -7,31 +7,26 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import in.complyease.dto.Business.BusinessRequest;
-import in.complyease.dto.Business.BusinessResponse;
+import in.complyease.dto.business.AssignedCADTO;
+import in.complyease.dto.business.BusinessRequest;
+import in.complyease.dto.business.BusinessResponse;
 import in.complyease.service.BusinessService;
 import jakarta.validation.Valid;
 
 @RestController
-@RequestMapping("/user")
-//@CrossOrigin(origins = "http://localhost:5173")
 public class BusinessController {
 
-    @Autowired
-    private BusinessService businessService;
+    @Autowired private BusinessService businessService;
 
-    @PostMapping("/business")
+    @PostMapping("/user/business")
     public ResponseEntity<?> createBusiness(@Valid @RequestBody BusinessRequest request,
                                             Principal principal) {
-
         String email = principal.getName();
-
         BusinessResponse response = businessService.createBusiness(request, email);
-
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/business")
+    @GetMapping("/user/business")
     public ResponseEntity<List<BusinessResponse>> getBusinesses(Principal principal) {
 
         String email = principal.getName();
@@ -41,18 +36,18 @@ public class BusinessController {
         );
     }
     
-    @GetMapping("/business/{id}")
+    @GetMapping("/user/business/{id}")
     public ResponseEntity<?> getBusinessById(@PathVariable int id) {
         return ResponseEntity.ok(businessService.getBusinessById(id));
     }
 
-    @DeleteMapping("/business/{id}")
+    @DeleteMapping("/user/business/{id}")
     public ResponseEntity<?> deleteBusiness(@PathVariable int id) {
         businessService.deleteBusiness(id);
         return ResponseEntity.ok("Deleted successfully");
     }
     
-    @PutMapping("/business/{id}")
+    @PutMapping("/user/business/{id}")
     public ResponseEntity<?> updateBusiness(@PathVariable int id,
                                             @RequestBody BusinessRequest request,
                                             Principal principal) {
@@ -61,4 +56,30 @@ public class BusinessController {
             businessService.updateBusiness(id, request, email)
         );
     }
+   
+    
+    @GetMapping("/ca/business")
+    public ResponseEntity<?> getAssignedBusinesses(
+            Principal principal
+    ) {
+
+        String email = principal.getName();
+
+        return ResponseEntity.ok(
+                businessService.getAssignedBusinesses(email)
+        );
+    }
+    
+    @PatchMapping("/user/business/{id}/request-ca")
+    public ResponseEntity<?> requestCA(
+            @PathVariable int id,
+            Principal principal) {
+
+        String email = principal.getName();
+
+        return ResponseEntity.ok(
+                businessService.requestCA(id, email)
+        );
+    }
+   
 }

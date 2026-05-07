@@ -8,8 +8,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import in.complyease.Mapper.BusinessMapper;
-import in.complyease.dto.Business.*;
+import in.complyease.dto.business.*;
 import in.complyease.entity.*;
+import in.complyease.enums.CAAssignmentStatus;
 import in.complyease.repository.*;
 
 @Service
@@ -27,6 +28,9 @@ public class BusinessService {
 		Business business = new Business();
 		business.setBusinessName(request.getBusinessName());
 		business.setBusinessGstNumber(request.getBusinessGstNumber());
+		business.setCaAssignmentStatus(
+			    CAAssignmentStatus.NO_CA
+			);
 		business.setUser(user);
 
 		Business saved = businessRepository.save(business);
@@ -84,4 +88,71 @@ public class BusinessService {
 	    // 6. Return response
 	    return BusinessMapper.mapToBusinessDTO(updated);
 	}
+	
+	@Transactional
+	public BusinessResponse assignCA(int businessId, Long caId) {
+
+	    Business business = businessRepository.findById(businessId)
+	            .orElseThrow(() -> new RuntimeException("Business not found"));
+
+	    User ca = userRepository.findById(caId)
+	            .orElseThrow(() -> new RuntimeException("CA not found"));
+
+	    if (ca.getRole() != in.complyease.enums.UserRole.ROLE_CA) {
+	        throw new RuntimeException("Selected user is not a CA");
+	    }
+
+	    business.setAssignedCA(ca);
+	    business.setCaAssignmentStatus(
+	    	    CAAssignmentStatus.ASSIGNED
+	    	);
+
+	    Business updated = businessRepository.save(business);
+
+	    return BusinessMapper.mapToBusinessDTO(updated);
+	}
+	
+	public List<BusinessResponse> getAssignedBusinesses(String email) {
+
+	    User ca = userRepository.findByEmail(email)
+	            .orElseThrow(() -> new RuntimeException("CA not found"));
+
+	    List<Business> businesses =
+	            businessRepository.findByAssignedCA(ca);
+
+	    return businesses.stream()
+	            .map(BusinessMapper::mapToBusinessDTO)
+	            .toList();
+	}
+	
+	@Transactional
+	public BusinessResponse requestCA(int businessId, String email) {
+
+	    User user = userRepository.findByEmail(email)
+	            .orElseThrow(() -> new RuntimeException("User not found"));
+
+	    Business business = businessRepository.findById(businessId)
+	            .orElseThrow(() -> new RuntimeException("Business not found"));
+
+	    if (!business.getUser().getId().equals(user.getId())) {
+	        throw new RuntimeException("Unauthorized access");
+	    }
+
+	    business.setCaAssignmentStatus(CAAssignmentStatus.REQUESTED);
+
+	    Business updated = businessRepository.save(business);
+
+	    return BusinessMapper.mapToBusinessDTO(updated);
+	}
+	
+    public List<BusinessResponse> getRequestedBusinesses() {
+
+        List<Business> businesses =
+                businessRepository.findByCaAssignmentStatus(CAAssignmentStatus.REQUESTED);
+
+        return businesses.stream()
+                .map(BusinessMapper::mapToBusinessDTO)
+                .toList();
+    }
+	
 }
