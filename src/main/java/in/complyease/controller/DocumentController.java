@@ -13,6 +13,7 @@ import in.complyease.service.DocumentService;
 
 @RestController
 @RequestMapping("/user/document")
+//@CrossOrigin(origins = "http://localhost:5173")
 public class DocumentController {
 
     @Autowired

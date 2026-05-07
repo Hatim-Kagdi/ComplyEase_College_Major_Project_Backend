@@ -27,10 +27,12 @@ public class SecurityConfig {
 	    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
 	        http
+	        		.cors(cors -> {})
 	            .csrf(csrf -> csrf.disable()) // disable CSRF for APIs
 	            .authorizeHttpRequests(auth -> auth
 	                .requestMatchers("/auth/**").permitAll()
-	                .requestMatchers("/user/**").hasRole("USER")// allow register/login
+	                .requestMatchers("/user/**").hasRole("USER")
+	                .requestMatchers("/ca/**").hasRole("CA")// allow register/login
 	                .anyRequest().authenticated() // secure everything else
 	            )
 	            .addFilterBefore(jwtfilter, UsernamePasswordAuthenticationFilter.class);

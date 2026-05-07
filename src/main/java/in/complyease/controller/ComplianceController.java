@@ -13,6 +13,7 @@ import in.complyease.service.ComplianceService;
 
 @RestController
 @RequestMapping("/user/compliance")
+//@CrossOrigin(origins = "http://localhost:5173")
 public class ComplianceController {
 
     @Autowired
