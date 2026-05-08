@@ -35,6 +35,12 @@ public class User extends BaseEntity{
 	    @Column
 	    private String password;
 	    
+	    @Column(name = "is_active")
+	    private boolean isActive = true;
+	    
+	    @Column(name = "is_approved")
+	    private boolean isApproved = false;
+	    
 	    @Enumerated(EnumType.STRING)
 	    @Column
 	    private UserRole role;
@@ -44,5 +50,6 @@ public class User extends BaseEntity{
 	    
 	    @OneToMany(mappedBy = "assignedCA", fetch = FetchType.LAZY)
 	    private List<Business> assignedBusinesses;
-
+	    
+	    
 }

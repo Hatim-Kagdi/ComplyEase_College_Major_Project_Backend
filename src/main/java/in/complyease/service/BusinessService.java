@@ -154,5 +154,13 @@ public class BusinessService {
                 .map(BusinessMapper::mapToBusinessDTO)
                 .toList();
     }
+    
+    public List<BusinessResponse> getAllBusinesses() {
+
+        return businessRepository.findAll()
+                .stream()
+                .map(BusinessMapper::mapToBusinessDTO)
+                .toList();
+    }
 	
 }

@@ -1,4 +1,4 @@
-package in.complyease.dto;
+package in.complyease.dto.dashboard;
 
 import lombok.*;
 

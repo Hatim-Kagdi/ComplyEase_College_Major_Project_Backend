@@ -7,10 +7,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import in.complyease.dto.UserDashboardStatsDTO;
 import in.complyease.dto.business.AssignedCADTO;
 import in.complyease.dto.business.BusinessRequest;
 import in.complyease.dto.business.BusinessResponse;
+import in.complyease.dto.dashboard.UserDashboardStatsDTO;
 import in.complyease.service.BusinessService;
 import in.complyease.service.UserDashboardService;
 import jakarta.validation.Valid;

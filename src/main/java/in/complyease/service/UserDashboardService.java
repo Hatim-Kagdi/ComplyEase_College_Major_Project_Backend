@@ -6,7 +6,7 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import in.complyease.dto.UserDashboardStatsDTO;
+import in.complyease.dto.dashboard.UserDashboardStatsDTO;
 import in.complyease.entity.Business;
 import in.complyease.entity.Compliance;
 import in.complyease.entity.User;
