@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,8 +17,10 @@ import in.complyease.repository.*;
 @Service
 public class BusinessService {
 	@Autowired private BusinessRepository businessRepository;
-
+	@Autowired private EmailService emailService;
 	@Autowired private UserRepository userRepository;
+	
+	@Value("${app.admin.email}") private String adminEmail;
 
 	@Transactional
 	public BusinessResponse createBusiness(BusinessRequest request, String email) {
@@ -103,11 +106,35 @@ public class BusinessService {
 	    }
 
 	    business.setAssignedCA(ca);
-	    business.setCaAssignmentStatus(
-	    	    CAAssignmentStatus.ASSIGNED
-	    	);
+	    business.setCaAssignmentStatus(CAAssignmentStatus.ASSIGNED);
 
 	    Business updated = businessRepository.save(business);
+	    
+	    //Email to User
+	    emailService.sendEmail(
+	            updated.getUser().getEmail(),
+	            "CA Assigned To Your Business",
+	            "Hello "
+	            + updated.getUser().getName()
+	            + ",\n\n"
+	            + "CA "
+	            + ca.getName()
+	            + " has been assigned to your business "
+	            + updated.getBusinessName()
+	            + "."
+	    );
+	    
+	    //Email to CA
+	    emailService.sendEmail(
+	            ca.getEmail(),
+	            "New Business Assigned",
+	            "Hello "
+	            + ca.getName()
+	            + ",\n\n"
+	            + "You have been assigned to business "
+	            + updated.getBusinessName()
+	            + "."
+	    );
 
 	    return BusinessMapper.mapToBusinessDTO(updated);
 	}
@@ -141,6 +168,16 @@ public class BusinessService {
 	    business.setCaAssignmentStatus(CAAssignmentStatus.REQUESTED);
 
 	    Business updated = businessRepository.save(business);
+	    
+	    emailService.sendEmail(
+	            adminEmail,
+	            "New CA Assignment Request",
+	            "A business has requested CA assignment.\n\n"
+	            + "Business Name: "
+	            + updated.getBusinessName()
+	            + "\nGST Number: "
+	            + updated.getBusinessGstNumber()
+	    );
 
 	    return BusinessMapper.mapToBusinessDTO(updated);
 	}

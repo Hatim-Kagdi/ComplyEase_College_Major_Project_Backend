@@ -26,6 +26,10 @@ public class ComplianceService {
 	private BusinessRepository businessRepository;
 	@Autowired
 	private UserRepository userRepository;
+	@Autowired
+	private NotificationService notificationService;
+	@Autowired
+	private EmailService emailService;
 
 	@Transactional
 	public ComplianceResponse createCompliance(ComplianceRequest request, String email) {
@@ -51,6 +55,32 @@ public class ComplianceService {
 
 		// 5. Save
 		Compliance saved = complianceRepository.save(compliance);
+		
+		String message =
+		        request.getComplianceType()
+		        +
+		        " compliance created for "
+		        +
+		        business.getBusinessName()
+		        +
+		        ". Due date: "
+		        +
+		        request.getDueDate();
+		
+		if (business.getAssignedCA() != null) {
+		    emailService.sendEmail(
+		            business.getAssignedCA().getEmail(),
+		            "New Compliance Added",
+		            "A new "
+		            + saved.getComplianceType()
+		            + " compliance has been added for business "
+		            + business.getBusinessName()
+		    );
+		}
+		
+		notificationService.createNotification(business,message);
+		
+		emailService.sendEmail(user.getEmail(),"Compliance Created",message);
 
 		// 6. Return response
 		return new ComplianceResponse(saved.getComplianceId(), business.getBusinessId(), business.getBusinessName(),

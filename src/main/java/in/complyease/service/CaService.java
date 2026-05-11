@@ -15,11 +15,10 @@ import in.complyease.repository.UserRepository;
 @Service
 public class CaService {
 	@Autowired private UserRepository userRepository;
+	@Autowired private EmailService emailService;
 	
 	public List<CADTO> getAllCAUsers() {
-
-        List<User> caUsers =
-                userRepository.findByRole(UserRole.ROLE_CA);
+        List<User> caUsers = userRepository.findByRole(UserRole.ROLE_CA);
 
         return caUsers.stream()
                 .map(user -> new CADTO(
@@ -32,11 +31,7 @@ public class CaService {
 	
 	public List<UserManagementDTO> getPendingCAs() {
 
-	    return userRepository
-	            .findByRoleAndIsApproved(
-	                    UserRole.ROLE_CA,
-	                    false
-	            )
+	    return userRepository.findByRoleAndIsApproved(UserRole.ROLE_CA,false)
 	            .stream()
 	            .map(user -> new UserManagementDTO(
 	                    user.getId(),
@@ -50,17 +45,22 @@ public class CaService {
 	}
 	
 	@Transactional
-	public UserManagementDTO approveCA(
-	        Long userId
-	) {
-
+	public UserManagementDTO approveCA(Long userId) {
 	    User user = userRepository.findById(userId)
-	            .orElseThrow(() ->
-	                    new RuntimeException("CA not found"));
+	            .orElseThrow(() -> new RuntimeException("CA not found"));
 
 	    user.setApproved(true);
-
 	    User updated = userRepository.save(user);
+	    
+	    emailService.sendEmail(
+	            updated.getEmail(),
+	            "CA Account Approved - ComplyEase",
+	            "Hello " + updated.getName() + ",\n\n"
+	            + "Your CA account has been approved successfully.\n"
+	            + "You can now log in to ComplyEase.\n\n"
+	            + "Regards,\n"
+	            + "ComplyEase Team"
+	    );
 
 	    return new UserManagementDTO(
 	            updated.getId(),

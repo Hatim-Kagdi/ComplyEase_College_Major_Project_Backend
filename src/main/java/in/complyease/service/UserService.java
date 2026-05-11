@@ -3,6 +3,7 @@ package in.complyease.service;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,35 +24,56 @@ public class UserService {
 	@Autowired private BCryptPasswordEncoder passwordEncoder;
 	@Autowired private UserRepository userRepository;
     @Autowired private JWTUtil jwtUtil;
+    
+    @Autowired private EmailService emailService;
+    
+    @Value("${app.admin.email}")
+    private String adminEmail;
 
     @Transactional
-	public User register(RegisterRequest request) {
-		System.out.println("Service Register method!");
-		User user = new User();
+    public User register(RegisterRequest request) {
+        System.out.println("Service Register method!");
+        User user = new User();
+        user.setName(request.getName());
+        user.setEmail(request.getEmail());
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
+        user.setActive(true);
 
-		user.setName(request.getName());
-		user.setEmail(request.getEmail());
-		user.setPassword(passwordEncoder.encode(request.getPassword()));
-		user.setActive(true);
-		if (request.getRole() == UserRole.ROLE_CA) {
+        if (request.getRole() == UserRole.ROLE_CA) {
+            user.setRole(UserRole.ROLE_CA);
+            user.setApproved(false);
+        }
+        else if (request.getRole() == UserRole.ROLE_USER) {
+            user.setRole(UserRole.ROLE_USER);
+            user.setApproved(true);
+        }
+        else {
+            throw new RuntimeException("Invalid role selected");
+        }
 
-		    user.setRole(UserRole.ROLE_CA);
+        User savedUser = userRepository.save(user);
+        
+        // EMAIL NOTIFICATIONS     
+        if (savedUser.getRole() == UserRole.ROLE_CA) {
+            // EMAIL TO CA
+            emailService.sendEmail(
+                    savedUser.getEmail(),
+                    "CA Registration Request Received",
+                    "Your CA account registration request has been received. "
+                    + "Please wait for admin approval."
+            );
 
-		    user.setApproved(false);
-		} 
-		else if (request.getRole() == UserRole.ROLE_USER) {
-
-		    user.setRole(UserRole.ROLE_USER);
-
-		    user.setApproved(true);
-		}
-	    else {
-	        // This is likely what was being triggered before
-	        throw new RuntimeException("Invalid role selected");
-	    }
-		
-		return userRepository.save(user);
-	}
+            // EMAIL TO ADMIN
+            emailService.sendEmail(
+            			adminEmail,
+                    "New CA Approval Request",
+                    "A new CA has registered.\n\n"
+                    + "Name: " + savedUser.getName()
+                    + "\nEmail: " + savedUser.getEmail()
+            );
+        }
+        return savedUser;
+    }
 	
     public AuthResponseDTO login(LoginRequest request) {
 
@@ -59,20 +81,11 @@ public class UserService {
                 .orElseThrow(() -> new RuntimeException("User not found"));
         
         if (!user.isActive()) {
-            throw new RuntimeException(
-                    "Your account is deactivated"
-            );
+            throw new RuntimeException("Your account is deactivated");
         }
         
-        if (
-        	    user.getRole() == UserRole.ROLE_CA
-        	    &&
-        	    !user.isApproved()
-        	) {
-
-        	    throw new RuntimeException(
-        	            "CA account pending approval"
-        	    );
+        if (user.getRole() == UserRole.ROLE_CA && !user.isApproved()) {
+        	    throw new RuntimeException("CA account pending approval");
         	}
 
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
@@ -106,16 +119,11 @@ public class UserService {
     }
     
     @Transactional
-    public UserManagementDTO toggleUserStatus(
-            Long userId
-    ) {
-
+    public UserManagementDTO toggleUserStatus(Long userId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() ->
-                        new RuntimeException("User not found"));
+                .orElseThrow(() -> new RuntimeException("User not found"));
 
         user.setActive(!user.isActive());
-
         User updated = userRepository.save(user);
 
         return new UserManagementDTO(

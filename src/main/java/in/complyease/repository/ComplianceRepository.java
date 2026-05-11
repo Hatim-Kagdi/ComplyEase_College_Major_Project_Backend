@@ -17,15 +17,11 @@ public interface ComplianceRepository extends JpaRepository<Compliance , Integer
     // Optional (useful later): get all compliances for multiple businesses
     List<Compliance> findByBusinessIn(List<Business> businesses);
     
-    long countByBusinessAssignedCAAndComplianceStatus(
-            User ca,
-            ComplianceStatus status
-    );
+    long countByBusinessAssignedCAAndComplianceStatus(User ca,ComplianceStatus status);
     
-    long countByBusinessAssignedCAAndComplianceDueDateBetween(
-            User ca,
-            LocalDate startDate,
-            LocalDate endDate
-    );
+    long countByBusinessAssignedCAAndComplianceDueDateBetween(User ca,LocalDate startDate,LocalDate endDate);
+    
+    //Method for notification
+    List<Compliance> findByComplianceDueDateBetweenAndComplianceStatusNot(LocalDate startDate,LocalDate endDate,ComplianceStatus status);
 
 }
