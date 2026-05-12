@@ -15,6 +15,7 @@ import in.complyease.dto.RegisterRequest;
 import in.complyease.dto.admin.UserManagementDTO;
 import in.complyease.dto.business.CADTO;
 import in.complyease.entity.User;
+import in.complyease.enums.CAApprovalStatus;
 import in.complyease.enums.UserRole;
 import in.complyease.repository.UserRepository;
 import in.complyease.security.JWTUtil;
@@ -27,8 +28,7 @@ public class UserService {
     
     @Autowired private EmailService emailService;
     
-    @Value("${app.admin.email}")
-    private String adminEmail;
+    @Value("${app.admin.email}") private String adminEmail;
 
     @Transactional
     public User register(RegisterRequest request) {
@@ -41,11 +41,11 @@ public class UserService {
 
         if (request.getRole() == UserRole.ROLE_CA) {
             user.setRole(UserRole.ROLE_CA);
-            user.setApproved(false);
+            user.setApprovalStatus(CAApprovalStatus.PENDING);
         }
         else if (request.getRole() == UserRole.ROLE_USER) {
             user.setRole(UserRole.ROLE_USER);
-            user.setApproved(true);
+            user.setApprovalStatus(CAApprovalStatus.APPROVED);
         }
         else {
             throw new RuntimeException("Invalid role selected");
@@ -83,10 +83,6 @@ public class UserService {
         if (!user.isActive()) {
             throw new RuntimeException("Your account is deactivated");
         }
-        
-        if (user.getRole() == UserRole.ROLE_CA && !user.isApproved()) {
-        	    throw new RuntimeException("CA account pending approval");
-        	}
 
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
             throw new RuntimeException("Invalid password");
@@ -98,7 +94,8 @@ public class UserService {
                 token,
                 user.getRole(),
                 user.getName(),
-                user.getEmail()
+                user.getEmail(),
+                user.getApprovalStatus()
         );
     }
     
@@ -113,7 +110,7 @@ public class UserService {
                         user.getEmail(),
                         user.getRole(),
                         user.isActive(),
-                        user.isApproved()
+                        user.getApprovalStatus()
                 ))
                 .toList();
     }
@@ -125,6 +122,23 @@ public class UserService {
 
         user.setActive(!user.isActive());
         User updated = userRepository.save(user);
+        
+        String subject;
+        String message;
+
+        if (updated.isActive()) {
+            subject = "Account Activated";
+            message ="Your ComplyEase account has been activated.";
+        }else {
+            subject = "Account Deactivated";
+            message ="Your ComplyEase account has been temporarily deactivated.";
+        }
+
+        emailService.sendEmail(
+                updated.getEmail(),
+                subject,
+                message
+        );
 
         return new UserManagementDTO(
                 updated.getId(),
@@ -132,7 +146,7 @@ public class UserService {
                 updated.getEmail(),
                 updated.getRole(),
                 updated.isActive(),
-                updated.isApproved()
+                updated.getApprovalStatus()
         );
     }
     

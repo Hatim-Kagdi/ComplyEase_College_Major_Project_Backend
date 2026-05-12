@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import in.complyease.entity.User;
+import in.complyease.enums.CAApprovalStatus;
 import in.complyease.enums.UserRole;
 
 @Repository
@@ -15,5 +16,5 @@ public interface UserRepository extends JpaRepository<User,Long>{
 	
 	List<User> findByRole(UserRole role);
 	
-	List<User> findByRoleAndIsApproved(UserRole role, boolean isApproved);
+	List<User> findByRoleAndApprovalStatus(UserRole role,CAApprovalStatus approvalStatus);
 }

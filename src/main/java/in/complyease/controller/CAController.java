@@ -16,6 +16,7 @@ public class CAController {
 	@Autowired private ComplianceService complianceService;
 	@Autowired private DocumentService documentService;
 	@Autowired private CADashboardStatsService dashboardService;
+	@Autowired private CaService caService;
 	
 	@GetMapping("/business")
     public ResponseEntity<?> getAssignedBusinesses(
@@ -82,5 +83,10 @@ public class CAController {
 	            dashboardService.getCADashboardStats(email)
 	    );
 	}
-
+	
+	 @PatchMapping("/{email:.+}/reapply")
+	    public ResponseEntity<?> reapplyCA(@PathVariable String email) {
+	     	System.out.println("CA reapply controller");
+	        return ResponseEntity.ok(caService.reapplyCA(email));
+	    }
 }

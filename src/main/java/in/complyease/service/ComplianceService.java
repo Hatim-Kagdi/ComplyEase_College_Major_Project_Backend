@@ -153,28 +153,6 @@ public class ComplianceService {
 	}
 	
 	@Transactional
-	public ComplianceResponse updateComplianceStatus(int complianceId, String email, String status) {
-
-		User user = userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("User not found"));
-
-		Compliance compliance = complianceRepository.findById(complianceId)
-				.orElseThrow(() -> new RuntimeException("Compliance not found"));
-
-		//Ownership check
-		if (!compliance.getBusiness().getUser().getId().equals(user.getId())) {
-			throw new RuntimeException("Unauthorized access");
-		}
-
-		compliance.setComplianceStatus(in.complyease.enums.ComplianceStatus.valueOf(status));
-
-		Compliance updated = complianceRepository.save(compliance);
-
-		return new ComplianceResponse(updated.getComplianceId(), updated.getBusiness().getBusinessId(),
-				updated.getBusiness().getBusinessName(), updated.getComplianceType(), updated.getComplianceDueDate(),
-				updated.getComplianceStatus());
-	}
-	
-	@Transactional
 	public void deleteCompliance(int complianceId, String email) {
 
 	    User user = userRepository.findByEmail(email)
@@ -219,12 +197,7 @@ public class ComplianceService {
 	}
 	
 	@Transactional
-	public ComplianceResponse updateComplianceStatusByCA(
-	        int complianceId,
-	        String email,
-	        String status
-	) {
-
+	public ComplianceResponse updateComplianceStatusByCA(int complianceId,String email,String status) {
 	    User ca = userRepository.findByEmail(email)
 	            .orElseThrow(() -> new RuntimeException("CA not found"));
 
@@ -232,24 +205,26 @@ public class ComplianceService {
 	            .orElseThrow(() -> new RuntimeException("Compliance not found"));
 
 	    // CHECK CA IS ASSIGNED TO BUSINESS
-	    if (
-	        compliance.getBusiness().getAssignedCA() == null
-	        ||
-	        !compliance.getBusiness()
-	                .getAssignedCA()
-	                .getId()
-	                .equals(ca.getId())
-	    ) {
-	        throw new RuntimeException(
-	                "You are not assigned to this business"
-	        );
+	    if (compliance.getBusiness().getAssignedCA() == null ||!compliance.getBusiness().getAssignedCA()
+	                .getId().equals(ca.getId())) {
+	        throw new RuntimeException("You are not assigned to this business");
 	    }
 
-	    compliance.setComplianceStatus(
-	            in.complyease.enums.ComplianceStatus.valueOf(status)
-	    );
+	    compliance.setComplianceStatus(in.complyease.enums.ComplianceStatus.valueOf(status));
 
 	    Compliance updated = complianceRepository.save(compliance);
+	    
+	    String message =
+	            updated.getComplianceType()
+	            + " compliance marked "
+	            + updated.getComplianceStatus()
+	            + " by your CA for business "
+	            + updated.getBusiness().getBusinessName();
+	    
+	    notificationService.createNotification(updated.getBusiness(),message);
+	    
+	    emailService.sendEmail(updated.getBusiness().getUser().getEmail(),
+	    		"Compliance Status Updated",message);
 
 	    return new ComplianceResponse(
 	            updated.getComplianceId(),

@@ -1,5 +1,6 @@
 package in.complyease.dto;
 
+import in.complyease.enums.CAApprovalStatus;
 import in.complyease.enums.UserRole;
 import lombok.*;
 
@@ -13,5 +14,6 @@ public class AuthResponseDTO {
 	private UserRole role;
 	private String name;
 	private String email;
+	private CAApprovalStatus approvalStatus;
 
 }

@@ -22,6 +22,8 @@ public class DocumentService {
     @Autowired private DocumentRepository documentRepository;
     @Autowired private BusinessRepository businessRepository;
     @Autowired private UserRepository userRepository;
+    @Autowired private NotificationService notificationService;
+    @Autowired private EmailService emailService;
 
     //CREATE DOCUMENT
     @Transactional
@@ -49,6 +51,26 @@ public class DocumentService {
 
         // 4. Save
         Document saved = documentRepository.save(document);
+        
+        String message =
+                "New document uploaded for business "
+                + business.getBusinessName()
+                + ". Document: "
+                + saved.getDocumentFileName();
+        
+        notificationService.createNotification(
+                business,
+                message
+        );
+        
+        if (business.getAssignedCA() != null) {
+
+            emailService.sendEmail(
+                    business.getAssignedCA().getEmail(),
+                    "New Document Uploaded",
+                    message
+            );
+        }
 
         // 5. Return response
         return new DocumentResponse(

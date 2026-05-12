@@ -68,4 +68,65 @@ public class NotificationSchedulerService {
             emailService.sendEmail(user.getEmail(),"Compliance Reminder",message);
         }
     }
+    
+    @Scheduled(cron = "0 0 10 * * *")
+    @Transactional
+    public void markOverdueCompliances() {
+
+        LocalDate today = LocalDate.now();
+
+        List<Compliance> compliances =
+                complianceRepository
+                .findByComplianceDueDateBeforeAndComplianceStatusNot(
+                        today,
+                        ComplianceStatus.COMPLETED
+                );
+
+        for (Compliance compliance : compliances) {
+
+            // avoid updating again and again
+            if (compliance.getComplianceStatus()
+                    == ComplianceStatus.OVERDUE) {
+                continue;
+            }
+
+            compliance.setComplianceStatus(
+                    ComplianceStatus.OVERDUE
+            );
+
+            complianceRepository.save(compliance);
+
+            Business business = compliance.getBusiness();
+
+            String message =
+                    "Your "
+                    + compliance.getComplianceType()
+                    + " compliance for business "
+                    + business.getBusinessName()
+                    + " is OVERDUE.";
+
+            // save notification
+            notificationService.createNotification(
+                    business,
+                    message
+            );
+
+            // send email to user
+            emailService.sendEmail(
+                    business.getUser().getEmail(),
+                    "Compliance Overdue",
+                    message
+            );
+
+            // optional email to CA
+            if (business.getAssignedCA() != null) {
+
+                emailService.sendEmail(
+                        business.getAssignedCA().getEmail(),
+                        "Client Compliance Overdue",
+                        message
+                );
+            }
+        }
+    }
 }

@@ -24,4 +24,5 @@ public interface ComplianceRepository extends JpaRepository<Compliance , Integer
     //Method for notification
     List<Compliance> findByComplianceDueDateBetweenAndComplianceStatusNot(LocalDate startDate,LocalDate endDate,ComplianceStatus status);
 
+    List<Compliance> findByComplianceDueDateBeforeAndComplianceStatusNot(LocalDate date,ComplianceStatus status);
 }

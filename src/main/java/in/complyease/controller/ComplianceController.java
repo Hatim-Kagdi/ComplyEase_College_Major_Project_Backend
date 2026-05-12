@@ -67,19 +67,6 @@ public class ComplianceController {
         );
     }
 
-    // UPDATE STATUS
-    @PatchMapping("/{id}/status")
-    public ResponseEntity<ComplianceResponse> updateStatus(
-            @PathVariable int id,
-            @RequestParam String status,
-            Principal principal) {
-
-        String email = principal.getName();
-        return ResponseEntity.ok(
-                complianceService.updateComplianceStatus(id, email, status)
-        );
-    }
-
     // DELETE
     @DeleteMapping("/{id}")
     public ResponseEntity<String> deleteCompliance(

@@ -1,5 +1,6 @@
 package in.complyease.dto.admin;
 
+import in.complyease.enums.CAApprovalStatus;
 import in.complyease.enums.UserRole;
 import lombok.*;
 
@@ -19,5 +20,5 @@ public class UserManagementDTO {
 
     private boolean isActive;
     
-    private boolean isApproved;
+    private CAApprovalStatus approvalStatus;
 }

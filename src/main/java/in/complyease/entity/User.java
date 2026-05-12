@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.hibernate.annotations.*;
 
+import in.complyease.enums.CAApprovalStatus;
 import in.complyease.enums.DocumentType;
 import in.complyease.enums.UserRole;
 import jakarta.persistence.*;
@@ -29,7 +30,7 @@ public class User extends BaseEntity{
 	    @Column
 	    private String name;
 
-	    @Column
+	    @Column(unique = true)
 	    private String email;
 	    
 	    @Column
@@ -38,8 +39,8 @@ public class User extends BaseEntity{
 	    @Column(name = "is_active")
 	    private boolean isActive = true;
 	    
-	    @Column(name = "is_approved")
-	    private boolean isApproved = false;
+	    @Enumerated(EnumType.STRING)
+	    private CAApprovalStatus approvalStatus;
 	    
 	    @Enumerated(EnumType.STRING)
 	    @Column
