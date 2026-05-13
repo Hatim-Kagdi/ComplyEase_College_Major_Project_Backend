@@ -1,7 +1,9 @@
 package in.complyease.dto.compliance;
 
 import java.time.LocalDate;
+import java.util.List;
 
+import in.complyease.dto.document.DocumentResponse;
 import in.complyease.enums.ComplianceStatus;
 import in.complyease.enums.ComplianceType;
 import lombok.*;
@@ -19,5 +21,6 @@ public class ComplianceResponse {
     private LocalDate dueDate;
     private ComplianceStatus status;
     
+    private List<DocumentResponse> documents;
     
 }

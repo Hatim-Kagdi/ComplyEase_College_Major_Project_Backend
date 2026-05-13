@@ -78,4 +78,9 @@ public class ComplianceController {
 
         return ResponseEntity.ok("Compliance deleted successfully");
     }
+    
+    @GetMapping("/business/{id}")
+    public ResponseEntity<?> getComplianceByBusinessId(@PathVariable Long id){
+    	return ResponseEntity.ok(complianceService.getComplianceByBusinessId(id));
+    }
 }

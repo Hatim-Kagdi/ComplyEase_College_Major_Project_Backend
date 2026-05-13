@@ -12,6 +12,8 @@ public class DocumentRequest {
 
     @NotNull(message = "Business ID is required")
     private Integer businessId;
+    
+    private Integer complianceId;
 
     @NotBlank(message = "File name is required")
     private String fileName;

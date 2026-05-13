@@ -35,4 +35,8 @@ public class Document extends BaseEntity{
 	@Enumerated(EnumType.STRING)
 	@Column(name = "document_type")
 	private DocumentType documentType;
+	
+	@ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "compliance_id") // Creates the foreign key column
+    private Compliance compliance;
 }

@@ -25,4 +25,6 @@ public interface ComplianceRepository extends JpaRepository<Compliance , Integer
     List<Compliance> findByComplianceDueDateBetweenAndComplianceStatusNot(LocalDate startDate,LocalDate endDate,ComplianceStatus status);
 
     List<Compliance> findByComplianceDueDateBeforeAndComplianceStatusNot(LocalDate date,ComplianceStatus status);
+
+	List<Compliance> findByBusinessBusinessId(Long businessId);
 }

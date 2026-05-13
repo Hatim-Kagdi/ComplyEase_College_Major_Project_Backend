@@ -7,29 +7,21 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import in.complyease.dto.compliance.ComplianceRequest;
-import in.complyease.dto.compliance.ComplianceResponse;
-import in.complyease.entity.Business;
-import in.complyease.entity.Compliance;
-import in.complyease.entity.User;
+import in.complyease.dto.compliance.*;
+import in.complyease.dto.document.DocumentResponse;
+import in.complyease.entity.*;
 import in.complyease.enums.ComplianceStatus;
-import in.complyease.repository.BusinessRepository;
-import in.complyease.repository.ComplianceRepository;
-import in.complyease.repository.UserRepository;
+import in.complyease.repository.*;
 
 @Service
 public class ComplianceService {
 
-	@Autowired
-	private ComplianceRepository complianceRepository;
-	@Autowired
-	private BusinessRepository businessRepository;
-	@Autowired
-	private UserRepository userRepository;
-	@Autowired
-	private NotificationService notificationService;
-	@Autowired
-	private EmailService emailService;
+	@Autowired private ComplianceRepository complianceRepository;
+	@Autowired private BusinessRepository businessRepository;
+	@Autowired private UserRepository userRepository;
+	@Autowired private DocumentRepository documentRepository;
+	@Autowired private NotificationService notificationService;
+	@Autowired private EmailService emailService;
 
 	@Transactional
 	public ComplianceResponse createCompliance(ComplianceRequest request, String email) {
@@ -55,36 +47,22 @@ public class ComplianceService {
 
 		// 5. Save
 		Compliance saved = complianceRepository.save(compliance);
-		
-		String message =
-		        request.getComplianceType()
-		        +
-		        " compliance created for "
-		        +
-		        business.getBusinessName()
-		        +
-		        ". Due date: "
-		        +
-		        request.getDueDate();
-		
+
+		String message = request.getComplianceType() + " compliance created for " + business.getBusinessName()
+				+ ". Due date: " + request.getDueDate();
+
 		if (business.getAssignedCA() != null) {
-		    emailService.sendEmail(
-		            business.getAssignedCA().getEmail(),
-		            "New Compliance Added",
-		            "A new "
-		            + saved.getComplianceType()
-		            + " compliance has been added for business "
-		            + business.getBusinessName()
-		    );
+			emailService.sendEmail(business.getAssignedCA().getEmail(), "New Compliance Added",
+					"A new " + saved.getComplianceType() + " compliance has been added for business "
+							+ business.getBusinessName());
 		}
-		
-		notificationService.createNotification(business,message);
-		
-		emailService.sendEmail(user.getEmail(),"Compliance Created",message);
+
+		notificationService.createNotification(business, message);
+
+		emailService.sendEmail(user.getEmail(), "Compliance Created", message);
 
 		// 6. Return response
-		return new ComplianceResponse(saved.getComplianceId(), business.getBusinessId(), business.getBusinessName(),
-				saved.getComplianceType(), saved.getComplianceDueDate(), saved.getComplianceStatus());
+		return mapToResponse(saved);
 	}
 
 	public List<ComplianceResponse> getUserCompliances(String email) {
@@ -98,10 +76,7 @@ public class ComplianceService {
 		List<Compliance> compliances = complianceRepository.findByBusinessIn(businesses);
 
 		// Map to response
-		return compliances.stream()
-				.map(c -> new ComplianceResponse(c.getComplianceId(), c.getBusiness().getBusinessId(),
-						c.getBusiness().getBusinessName(), c.getComplianceType(), c.getComplianceDueDate(),
-						c.getComplianceStatus()))
+		return compliances.stream().map(this::mapToResponse) // Use the new helper
 				.collect(Collectors.toList());
 	}
 
@@ -113,14 +88,12 @@ public class ComplianceService {
 		Compliance compliance = complianceRepository.findById(complianceId)
 				.orElseThrow(() -> new RuntimeException("Compliance not found"));
 
-		//Ownership check
+		// Ownership check
 		if (!compliance.getBusiness().getUser().getId().equals(user.getId())) {
 			throw new RuntimeException("Unauthorized access");
 		}
 
-		return new ComplianceResponse(compliance.getComplianceId(), compliance.getBusiness().getBusinessId(),
-				compliance.getBusiness().getBusinessName(), compliance.getComplianceType(),
-				compliance.getComplianceDueDate(), compliance.getComplianceStatus());
+		return mapToResponse(compliance);
 	}
 
 	@Transactional
@@ -136,7 +109,7 @@ public class ComplianceService {
 			throw new RuntimeException("Unauthorized access");
 		}
 
-		//Update fields
+		// Update fields
 		if (request.getComplianceType() != null) {
 			compliance.setComplianceType(request.getComplianceType());
 		}
@@ -147,92 +120,99 @@ public class ComplianceService {
 
 		Compliance updated = complianceRepository.save(compliance);
 
-		return new ComplianceResponse(updated.getComplianceId(), updated.getBusiness().getBusinessId(),
-				updated.getBusiness().getBusinessName(), updated.getComplianceType(), updated.getComplianceDueDate(),
-				updated.getComplianceStatus());
+		return mapToResponse(updated);
 	}
-	
+
 	@Transactional
 	public void deleteCompliance(int complianceId, String email) {
 
-	    User user = userRepository.findByEmail(email)
-	            .orElseThrow(() -> new RuntimeException("User not found"));
+		User user = userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("User not found"));
 
-	    Compliance compliance = complianceRepository.findById(complianceId)
-	            .orElseThrow(() -> new RuntimeException("Compliance not found"));
+		Compliance compliance = complianceRepository.findById(complianceId)
+				.orElseThrow(() -> new RuntimeException("Compliance not found"));
 
-	    //Ownership check
-	    if (!compliance.getBusiness().getUser().getId().equals(user.getId())) {
-	        throw new RuntimeException("Unauthorized access");
-	    }
+		// Ownership check
+		if (!compliance.getBusiness().getUser().getId().equals(user.getId())) {
+			throw new RuntimeException("Unauthorized access");
+		}
 
-	    complianceRepository.delete(compliance);
+		complianceRepository.delete(compliance);
 	}
-	
-	public List<ComplianceResponse> getAssignedBusinessCompliances(
-	        String email
-	) {
 
-	    User ca = userRepository.findByEmail(email)
-	            .orElseThrow(() -> new RuntimeException("CA not found"));
+	public List<ComplianceResponse> getAssignedBusinessCompliances(String email) {
 
-	    // Assigned businesses
-	    List<Business> businesses =
-	            businessRepository.findByAssignedCA(ca);
+		User ca = userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("CA not found"));
 
-	    // Their compliances
-	    List<Compliance> compliances =
-	            complianceRepository.findByBusinessIn(businesses);
+		// Assigned businesses
+		List<Business> businesses = businessRepository.findByAssignedCA(ca);
 
-	    return compliances.stream()
-	            .map(c -> new ComplianceResponse(
-	                    c.getComplianceId(),
-	                    c.getBusiness().getBusinessId(),
-	                    c.getBusiness().getBusinessName(),
-	                    c.getComplianceType(),
-	                    c.getComplianceDueDate(),
-	                    c.getComplianceStatus()
-	            ))
+		// Their compliances
+		List<Compliance> compliances = complianceRepository.findByBusinessIn(businesses);
+
+		return compliances.stream()
+	            .map(this::mapToResponse) // This ensures CA sees the "evidence" files
 	            .toList();
 	}
-	
+
 	@Transactional
-	public ComplianceResponse updateComplianceStatusByCA(int complianceId,String email,String status) {
-	    User ca = userRepository.findByEmail(email)
-	            .orElseThrow(() -> new RuntimeException("CA not found"));
+	public ComplianceResponse updateComplianceStatusByCA(int complianceId, String email, String status) {
+		User ca = userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("CA not found"));
 
-	    Compliance compliance = complianceRepository.findById(complianceId)
-	            .orElseThrow(() -> new RuntimeException("Compliance not found"));
+		Compliance compliance = complianceRepository.findById(complianceId)
+				.orElseThrow(() -> new RuntimeException("Compliance not found"));
 
-	    // CHECK CA IS ASSIGNED TO BUSINESS
-	    if (compliance.getBusiness().getAssignedCA() == null ||!compliance.getBusiness().getAssignedCA()
-	                .getId().equals(ca.getId())) {
-	        throw new RuntimeException("You are not assigned to this business");
-	    }
+		// CHECK CA IS ASSIGNED TO BUSINESS
+		if (compliance.getBusiness().getAssignedCA() == null
+				|| !compliance.getBusiness().getAssignedCA().getId().equals(ca.getId())) {
+			throw new RuntimeException("You are not assigned to this business");
+		}
 
-	    compliance.setComplianceStatus(in.complyease.enums.ComplianceStatus.valueOf(status));
+		compliance.setComplianceStatus(in.complyease.enums.ComplianceStatus.valueOf(status));
 
-	    Compliance updated = complianceRepository.save(compliance);
+		Compliance updated = complianceRepository.save(compliance);
+
+		String message = updated.getComplianceType() + " compliance marked " + updated.getComplianceStatus()
+				+ " by your CA for business " + updated.getBusiness().getBusinessName();
+
+		notificationService.createNotification(updated.getBusiness(), message);
+
+		emailService.sendEmail(updated.getBusiness().getUser().getEmail(), "Compliance Status Updated", message);
+
+		return mapToResponse(updated);
+	}
+	
+	public List<ComplianceResponse> getComplianceByBusinessId(Long businessId) {
+		List<Compliance> compliances = complianceRepository.findByBusinessBusinessId(businessId);
 	    
-	    String message =
-	            updated.getComplianceType()
-	            + " compliance marked "
-	            + updated.getComplianceStatus()
-	            + " by your CA for business "
-	            + updated.getBusiness().getBusinessName();
-	    
-	    notificationService.createNotification(updated.getBusiness(),message);
-	    
-	    emailService.sendEmail(updated.getBusiness().getUser().getEmail(),
-	    		"Compliance Status Updated",message);
+	    // 2. Map Entities to your ComplianceResponse DTO
+	    return compliances.stream()
+	        .map(comp -> new ComplianceResponse(
+	            comp.getComplianceId(),
+	            comp.getBusiness().getBusinessId(),
+	            comp.getBusiness().getBusinessName(),
+	            comp.getComplianceType(),
+	            comp.getComplianceDueDate(),
+	            comp.getComplianceStatus(),
+	            null // or map documents if needed
+	        ))
+	        .collect(Collectors.toList());
+	}
 
-	    return new ComplianceResponse(
-	            updated.getComplianceId(),
-	            updated.getBusiness().getBusinessId(),
-	            updated.getBusiness().getBusinessName(),
-	            updated.getComplianceType(),
-	            updated.getComplianceDueDate(),
-	            updated.getComplianceStatus()
-	    );
+	private ComplianceResponse mapToResponse(Compliance c) {
+		List<DocumentResponse> docs = List.of(); // Default to empty list
+
+		// Only fetch if the compliance record already exists in DB
+		if (c.getComplianceId() != 0) {
+			docs = documentRepository.findByCompliance_ComplianceId(c.getComplianceId()).stream()
+					.map(doc -> new DocumentResponse(doc.getDocumentId(), doc.getBusiness().getBusinessId(),
+							doc.getCompliance() != null ? doc.getCompliance().getComplianceId() : null,
+							doc.getBusiness().getBusinessName(), doc.getDocumentFileName(), doc.getDocumentFileUrl(),
+							doc.getDocumentType()))
+					.collect(Collectors.toList());
+		}
+
+		return new ComplianceResponse(c.getComplianceId(), c.getBusiness().getBusinessId(),
+				c.getBusiness().getBusinessName(), c.getComplianceType(), c.getComplianceDueDate(),
+				c.getComplianceStatus(), docs);
 	}
 }

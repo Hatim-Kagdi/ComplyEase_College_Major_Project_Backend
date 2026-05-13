@@ -14,4 +14,6 @@ public interface DocumentRepository extends JpaRepository<Document, Integer> {
     List<Document> findByBusiness(Business business);
 
     List<Document> findByBusinessIn(List<Business> businesses);
+    
+    List<Document> findByCompliance_ComplianceId(int complianceId);
 }

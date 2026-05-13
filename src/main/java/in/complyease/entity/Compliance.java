@@ -1,12 +1,14 @@
 package in.complyease.entity;
 
 import java.time.LocalDate;
+import java.util.*;
 
 import org.hibernate.annotations.*;
 
 import in.complyease.enums.ComplianceStatus;
 import in.complyease.enums.ComplianceType;
 import jakarta.persistence.*;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Table;
 import lombok.*;
 
@@ -39,4 +41,12 @@ public class Compliance extends BaseEntity{
 	@Enumerated(EnumType.STRING)
 	@Column(name = "status")
 	private ComplianceStatus complianceStatus;
+	
+	// Link to Documents
+    @OneToMany(mappedBy = "compliance", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<Document> documents = new ArrayList<>();
+
+    // Communication field for the CA
+    @Column(name = "ca_remarks", length = 500)
+    private String caRemarks;
 }
